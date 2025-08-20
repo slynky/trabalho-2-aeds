@@ -1,85 +1,72 @@
-// A classe Node agora gerencia seu próprio tipo e desenho
-class Node implements Comparable<Node> {
-  // Tipos de Tile (usando constantes inteiras)
+/**
+ * A classe Node representa uma única célula (ou "tile") no nosso mapa.
+ * Cada Node sabe sua posição no grid, seu tipo (Grama ou Caminho) e como
+ * se desenhar na tela usando as imagens corretas.
+ */
+class Node {
+  // --- TIPOS DE TILE ---
+  // Usar 'static final int' cria constantes para deixar o código mais legível.
   static final int GRAMA = 0;
   static final int CAMINHO = 1;
-  static final int OBSTACULO = 2;
-  
-  int tileType = GRAMA; // Por padrão, todo nó é grama
-  
-  Grid parentGrid;
-  int x, y; // Posição no grid
-  ArrayList<Node> neighbors;
 
-  // Propriedades para o Dijkstra
-  float distance = Float.POSITIVE_INFINITY;
-  Node predecessor = null;
+  // Array com as chaves para todas as nossas variações de grama.
+  // A ordem aqui deve corresponder às chaves que você usou no tileset.
+   final String[] VARIANTS_GRAMA = {
+    "GRAMA", 
+    "GRAMA_BRANCA", 
+    "GRAMA_BRANCA2", 
+    "GRAMA_FLORIDA", 
+    "GRAMA_PEDRA",
+    "GRAMA_COM_FLORES"
+  };
+  
+  int tileType = GRAMA;     // Define o tipo principal da célula.
+  int gramaVariant = 0;   // Guarda o índice da variante de grama a ser usada.
+  int x, y;               // Posição no grid (coluna e linha).
 
-  Node(int x_, int y_, Grid g) {
-    x = x_;
-    y = y_;
-    parentGrid = g;
-    neighbors = new ArrayList<Node>();
+  /**
+   * O Construtor da classe Node. Armazena as coordenadas do grid para esta célula.
+   */
+  Node(int x_, int y_) {
+    this.x = x_;
+    this.y = y_;
   }
   
-  @Override
-  int compareTo(Node other) {
-    return Float.compare(this.distance, other.distance);
-  }
-
-  // Encontra os vizinhos válidos
-  void findNeighbors() {
-    // Vizinho da direita
-    if (x < parentGrid.cols - 1) {
-      Node neighbor = parentGrid.nodes[x + 1][y];
-      if (neighbor.tileType != OBSTACULO) neighbors.add(neighbor);
-    }
-    // Vizinho da esquerda
-    if (x > 0) {
-      Node neighbor = parentGrid.nodes[x - 1][y];
-      if (neighbor.tileType != OBSTACULO) neighbors.add(neighbor);
-    }
-    // Vizinho de baixo
-    if (y < parentGrid.rows - 1) {
-      Node neighbor = parentGrid.nodes[x][y + 1];
-      if (neighbor.tileType != OBSTACULO) neighbors.add(neighbor);
-    }
-    // Vizinho de cima
-    if (y > 0) {
-      Node neighbor = parentGrid.nodes[x][y - 1];
-      if (neighbor.tileType != OBSTACULO) neighbors.add(neighbor);
-    }
-  }
-
-  // A NOVA LÓGICA DE DESENHO COM AUTO-TILING
+  /**
+   * O método de desenho para esta célula específica.
+   * Ele decide qual imagem usar com base no 'tileType' e na 'gramaVariant'.
+   */
   void drawNode() {
-    PImage spriteToDraw = null;
-    
-    // Lógica para decidir qual sprite usar
-    // Esta é uma versão simplificada. A lógica completa de auto-tiling
-    // precisaria verificar os 8 vizinhos para desenhar todas as quinas.
-    
-    if (tileType == OBSTACULO) {
-      // Se for um obstáculo, sempre desenha grama por baixo e o sprite por cima
-      image(tileset.get("GRAMA"), x * cellSize, y * cellSize, cellSize, cellSize);
-      spriteToDraw = tileset.get("OBSTACULO");
-    } 
-    else if (tileType == CAMINHO) {
-      spriteToDraw = tileset.get("CAMINHO");
-    } 
-    else if (tileType == GRAMA) {
-      // AQUI ENTRA A LÓGICA DE AUTO-TILING
-      // Por enquanto, apenas desenha grama. A lógica completa seria bem complexa,
-      // verificando o 'tileType' de cada vizinho para escolher um sprite de borda.
-      spriteToDraw = tileset.get("GRAMA");
+    // Checagem de segurança para evitar erro se as imagens não carregarem.
+    if (tileset == null) {
+      if (tileType == GRAMA) {
+        fill(34, 139, 34); // Verde
+      } else if (tileType == CAMINHO) {
+        fill(139, 69, 19); // Marrom
+      }
+      noStroke();
+      rect(x * cellSize, y * cellSize, cellSize, cellSize);
+      return;
     }
 
-    // Desenha o sprite escolhido
+    PImage spriteToDraw = null;
+
+    // Decide qual sprite pegar do nosso tileset
+    if (tileType == CAMINHO) {
+      spriteToDraw = tileset.get("CAMINHO");
+    } else { // Se for grama...
+      // 1. Pega a chave da variante correta ("GRAMA_FLORIDA", etc.) usando o índice.
+      String chaveDaGrama = VARIANTS_GRAMA[gramaVariant];
+      // 2. Pega a imagem do tileset usando essa chave.
+      spriteToDraw = tileset.get(chaveDaGrama);
+    }
+    
+    // Se a imagem foi encontrada, desenha na tela.
     if (spriteToDraw != null) {
       image(spriteToDraw, x * cellSize, y * cellSize, cellSize, cellSize);
     } else {
-      // Fallback para um retângulo colorido se o sprite não for encontrado
-      fill(255, 0, 255); // Cor de erro (magenta)
+      // Se não encontrou (ex: erro no nome da chave), desenha um quadrado magenta de alerta.
+      fill(255, 0, 255);
       noStroke();
       rect(x * cellSize, y * cellSize, cellSize, cellSize);
     }

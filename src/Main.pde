@@ -1,132 +1,170 @@
-import java.util.PriorityQueue;
+// ======================================================================
+// ABA PRINCIPAL: Genciador do Jogo (Versão Corrigida e Unificada)
+// ======================================================================
 
-// Gerenciador de todos os nossos sprites
-HashMap<String, PImage> tileset;
+// --- OBJETOS DO JOGO ---
+ArrayList<Macaco> macacos = new ArrayList<Macaco>();
+ArrayList<Balao> baloes = new ArrayList<Balao>();
+ArrayList<Projetil> projeteis = new ArrayList<Projetil>();
+ArrayList<Explosao> explosoes = new ArrayList<Explosao>();
 
+// --- OBJETOS DO MAPA ---
 Grid grid;
-int cols = 50;
-int rows = 50;
+HashMap<String, PImage> tileset;
+ArrayList<PVector> caminhoDosBaloes; // Armazena as coordenadas (em pixels) do caminho
+
+// --- CONFIGURAÇÕES GLOBAIS ---
+int cols = 24;
+int rows = 16;
 int cellSize;
 
-// Nós de início e fim
-Node startNode;
-Node endNode;
-
 void setup() {
-  size(800, 800);
+  size(960, 640);
+  noSmooth();
   
-  // Calcula o tamanho de cada célula
   cellSize = width / cols;
+  loadTileset(); 
   
-  // Carrega todos os sprites necessários
-  loadTileset();
+  // 2. Criar o mapa com um caminho fixo
+  criarMapaComCaminhoFixo();
   
-  // Cria o primeiro mapa
-  createNewMap();
+  // 3. Adicionar macacos para teste
+
 }
 
 void draw() {
-  // O grid agora desenha a si mesmo com os sprites corretos
+  // 1. DESENHAR O CENÁRIO
   if (grid != null) {
     grid.drawGrid();
+  } else {
+    background(135, 206, 235); // Cor de fundo fallback
   }
+
+  // 2. SPAWNER DE BALÕES
+  if (frameCount % 90 == 0) {
+    baloes.add(new BalaoAzul()); 
+  }
+  if (frameCount % 200 == 0) {
+    baloes.add(new BalaoBranco());
+  }
+  if (frameCount % 500 == 0) {
+    baloes.add(new BalaoPreto());
+  }
+
+  // 3. ATUALIZAR OBJETOS
+  for (Macaco m : macacos) { m.atualizar(baloes); }
+  for (Balao b : baloes) { b.atualizar(); }
+  for (Projetil p : projeteis) { p.atualizar(); }
+
+  // 4. PROCESSAR DANOS E COLISÕES
+  processarDanos();
+
+  // 5. LIMPAR OBJETOS DESTRUÍDOS
+  limparObjetos();
   
-  // Desenha marcadores para o início e o fim (pode ser substituído por sprites)
-  fill(0, 255, 0, 150); // Verde para o início
-  rect(startNode.x * cellSize, startNode.y * cellSize, cellSize, cellSize);
-  fill(255, 0, 0, 150); // Vermelho para o fim
-  rect(endNode.x * cellSize, endNode.y * cellSize, cellSize, cellSize);
+  // 6. DESENHAR OBJETOS DINÂMICOS
+  for (Balao b : baloes) { b.desenhar(); }
+  for (Macaco m : macacos) { m.desenhar(); }
+  for (Projetil p : projeteis) { p.desenhar(); }
+  for (Explosao e : explosoes) { e.desenhar(); }
 }
 
-// Função para gerar um novo mapa e resolver o caminho
-void createNewMap() {
-  // 1. CRIA O MAPA COM TIPOS DE TILES
-  grid = new Grid(cols, rows, 0.35); // 35% de chance de obstáculo
-  
-  // Define os pontos de partida e chegada
-  startNode = grid.nodes[0][0];
-  endNode = grid.nodes[cols - 1][rows - 1];
-  
-  // Garante que o início e o fim sejam caminhos livres (Grama)
-  startNode.tileType = Node.GRAMA;
-  endNode.tileType = Node.GRAMA;
-  
-  // Adiciona os vizinhos para cada nó (essencial para o grafo)
-  grid.addNeighbors();
-  
-  // 2. RODA O ALGORITMO DE DIJKSTRA
-  ArrayList<Node> path = dijkstra(startNode, endNode);
-  
-  // 3. ATUALIZA O MAPA COM O CAMINHO ENCONTRADO
-  if (path != null) {
-    for (Node n : path) {
-      n.tileType = Node.CAMINHO; // Transforma os nós do caminho em tipo "Caminho"
-    }
-  }
-}
 
-// O algoritmo de Dijkstra permanece quase o mesmo
-ArrayList<Node> dijkstra(Node start, Node end) {
-  PriorityQueue<Node> openSet = new PriorityQueue<Node>();
-  
+// Nova função que substitui a criação de mapa aleatório
+void criarMapaComCaminhoFixo() {
+  grid = new Grid(cols, rows);
+  caminhoDosBaloes = new ArrayList<PVector>();
+
+   // 1. Define todo o mapa como grama com variações aleatórias
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
-      grid.nodes[i][j].distance = Float.POSITIVE_INFINITY;
-      grid.nodes[i][j].predecessor = null;
+      Node n = grid.nodes[i][j];
+      n.tileType = Node.GRAMA;
+      
+      // CORREÇÃO 2: Adicionada a linha abaixo para que o jogo use as suas diferentes imagens de grama.
+      n.gramaVariant = int(random(n.VARIANTS_GRAMA.length));
     }
   }
-  
-  start.distance = 0;
-  openSet.add(start);
-  
-  while (!openSet.isEmpty()) {
-    Node current = openSet.poll();
-    
-    if (current == end) {
-      ArrayList<Node> finalPath = new ArrayList<Node>();
-      Node temp = current;
-      while (temp != null) {
-        finalPath.add(temp);
-        temp = temp.predecessor;
+
+  // 2. Desenha um caminho fixo e salva as coordenadas dos centros das células
+  // Caminho: entra pela esquerda, desce, vai pra direita, sobe um pouco e sai pela direita
+  desenharCaminho(0, 7, 5, 7);    // Horizontal
+  desenharCaminho(5, 7, 5, 12);   // Vertical
+  desenharCaminho(5, 12, 18, 12); // Horizontal
+  desenharCaminho(18, 12, 18, 4);  // Vertical
+  desenharCaminho(18, 4, 23, 4);   // Horizontal
+}
+
+// Função auxiliar para criar segmentos do caminho
+void desenharCaminho(int x1, int y1, int x2, int y2) {
+  if (x1 == x2) { // Linha Vertical
+    for (int y = min(y1, y2); y <= max(y1, y2); y++) {
+      Node n = grid.nodes[x1][y];
+      if (n.tileType != Node.CAMINHO) {
+        n.tileType = Node.CAMINHO;
+        caminhoDosBaloes.add(new PVector(x1 * cellSize + cellSize/2, y * cellSize + cellSize/2));
       }
-      return finalPath;
     }
-    
-    for (Node neighbor : current.neighbors) {
-      float newDistance = current.distance + 1; // Custo de movimento simples
-      
-      if (newDistance < neighbor.distance) {
-        neighbor.distance = newDistance;
-        neighbor.predecessor = current;
-        if (!openSet.contains(neighbor)) {
-          openSet.add(neighbor);
+  } else { // Linha Horizontal
+    for (int x = min(x1, x2); x <= max(x1, x2); x++) {
+       Node n = grid.nodes[x][y1];
+      if (n.tileType != Node.CAMINHO) {
+        n.tileType = Node.CAMINHO;
+        caminhoDosBaloes.add(new PVector(x * cellSize + cellSize/2, y1 * cellSize + cellSize/2));
+      }
+    }
+  }
+}
+
+void processarDanos(){
+  for (int i = projeteis.size() - 1; i >= 0; i--) {
+    Projetil p = projeteis.get(i);
+    if (p.atingiuAlvo()) {
+      if (p.alvo != null && !p.alvo.estaDestruido()) {
+        p.alvo.receberDano(p.dano);
+        if (p instanceof ProjetilBomba) {
+          ProjetilBomba pb = (ProjetilBomba) p;
+          explosoes.add(new Explosao(pb.x, pb.y, pb.raioDaExplosaoEmPixels, pb.dano));
         }
       }
+      projeteis.remove(i);
     }
   }
-  
-  println("Nenhum caminho encontrado!");
-  return null;
+  for (Explosao e : explosoes) {
+    if (!e.danoJaAplicado) {
+      for (Balao b : baloes) {
+        if (!b.imuneAExplosoes && dist(b.pos.x, b.pos.y, e.x, e.y) <= e.raioEmPixels) {
+          b.receberDano(e.dano);
+        }
+      }
+      e.danoJaAplicado = true;
+    }
+  }
 }
 
-// Carrega todas as imagens do nosso tileset
-void loadTileset() {
+void limparObjetos() {
+    for (int i = baloes.size() - 1; i >= 0; i--) {
+    if (baloes.get(i).estaDestruido() || baloes.get(i).chegouAoFim()) {
+      baloes.remove(i);
+    }
+  }
+  for (int i = explosoes.size() - 1; i >= 0; i--) {
+    if (!explosoes.get(i).estaAtiva()) {
+      explosoes.remove(i);
+    }
+  }
+}
+
+void loadTileset() {//o tileset nao tem mt oq falar
+
   tileset = new HashMap<String, PImage>();
-  
-  // Tiles Base
-  tileset.put("GRAMA", loadImage("grama.png"));
-  tileset.put("CAMINHO", loadImage("caminho_terra.png"));
-  tileset.put("OBSTACULO", loadImage("obstaculo_rocha.png"));
-  
-  // Tiles de Borda (essenciais para o auto-tiling)
-  // Adicione aqui os nomes exatos dos seus arquivos de borda
-  // Exemplo:
-  // tileset.put("BORDA_TOPO", loadImage("borda_grama_caminho_topo.png"));
-  // ... e assim por diante para todas as 8 combinações de borda/quina.
-  // Por enquanto, vamos simular com cores para ver a lógica funcionando.
-}
 
-// Gera um novo mapa quando o mouse é pressionado
-void mousePressed() {
-  createNewMap();
+  tileset.put("GRAMA", loadImage("../resources/grama.png"));
+  tileset.put("GRAMA_BRANCA", loadImage("../resources/gramaBranca2.png"));
+  tileset.put("GRAMA_BRANCA2", loadImage("../resources/gramaBranca4.png"));
+  tileset.put("GRAMA_FLORIDA", loadImage("../resources/gramaFlorida.png"));
+  tileset.put("GRAMA_PEDRA", loadImage("../resources/gramaPedra.png"));
+  tileset.put("GRAMA_COM_FLORES", loadImage("../resources/gramaFlor.png"));
+ 
+  tileset.put("CAMINHO", loadImage("../resources/caminho_terra.png")); 
 }
