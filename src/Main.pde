@@ -10,7 +10,9 @@ ArrayList<Explosao> explosoes = new ArrayList<Explosao>();
 
 // --- OBJETOS DO MAPA ---
 Grid grid;
-HashMap<String, PImage> tileset;
+HashMap<String, PImage> tileset;          // Para as imagens do mapa (ambiente)
+HashMap<String, PImage> spritesBaloes;    // Para as imagens dos inimigos
+HashMap<String, PImage> spritesMacacos;   // Para as imagens das torres
 ArrayList<PVector> caminhoDosBaloes; // Armazena as coordenadas (em pixels) do caminho
 
 // --- CONFIGURAÇÕES GLOBAIS ---
@@ -21,6 +23,7 @@ int cellSize;
 void setup() {
   size(960, 640);
   noSmooth();
+  imageMode(CENTER);
   
   cellSize = width / cols;
   loadTileset(); 
@@ -33,40 +36,7 @@ void setup() {
 }
 
 void draw() {
-  // 1. DESENHAR O CENÁRIO
-  if (grid != null) {
-    grid.drawGrid();
-  } else {
-    background(135, 206, 235); // Cor de fundo fallback
-  }
 
-  // 2. SPAWNER DE BALÕES
-  if (frameCount % 90 == 0) {
-    baloes.add(new BalaoAzul()); 
-  }
-  if (frameCount % 200 == 0) {
-    baloes.add(new BalaoBranco());
-  }
-  if (frameCount % 500 == 0) {
-    baloes.add(new BalaoPreto());
-  }
-
-  // 3. ATUALIZAR OBJETOS
-  for (Macaco m : macacos) { m.atualizar(baloes); }
-  for (Balao b : baloes) { b.atualizar(); }
-  for (Projetil p : projeteis) { p.atualizar(); }
-
-  // 4. PROCESSAR DANOS E COLISÕES
-  processarDanos();
-
-  // 5. LIMPAR OBJETOS DESTRUÍDOS
-  limparObjetos();
-  
-  // 6. DESENHAR OBJETOS DINÂMICOS
-  for (Balao b : baloes) { b.desenhar(); }
-  for (Macaco m : macacos) { m.desenhar(); }
-  for (Projetil p : projeteis) { p.desenhar(); }
-  for (Explosao e : explosoes) { e.desenhar(); }
 }
 
 
@@ -155,16 +125,32 @@ void limparObjetos() {
   }
 }
 
-void loadTileset() {//o tileset nao tem mt oq falar
-
+void loadTileset() {
+// Inicializa os HashMaps
   tileset = new HashMap<String, PImage>();
+  spritesBaloes = new HashMap<String, PImage>();
+  spritesMacacos = new HashMap<String, PImage>();
+  
 
-  tileset.put("GRAMA", loadImage("../resources/grama.png"));
-  tileset.put("GRAMA_BRANCA", loadImage("../resources/gramaBranca2.png"));
-  tileset.put("GRAMA_BRANCA2", loadImage("../resources/gramaBranca4.png"));
-  tileset.put("GRAMA_FLORIDA", loadImage("../resources/gramaFlorida.png"));
-  tileset.put("GRAMA_PEDRA", loadImage("../resources/gramaPedra.png"));
-  tileset.put("GRAMA_COM_FLORES", loadImage("../resources/gramaFlor.png"));
- 
-  tileset.put("CAMINHO", loadImage("../resources/caminho_terra.png")); 
+  // --- Carrega Sprites do Ambiente ---
+  tileset.put("GRAMA_PRINCIPAL", loadImage("../resources/Ambiente/grama_principal.png"));
+  tileset.put("CAMINHO_TERRA", loadImage("../resources/Ambiente/caminho_terra.png"));
+  tileset.put("GRAMA_BRANCA", loadImage("../resources/Ambiente/gramaBranca.png"));
+  tileset.put("GRAMA_FLOR", loadImage("../resources/Ambiente/gramaFlor.png"));
+  tileset.put("GRAMA_PEDRA", loadImage("../resources/Ambiente/gramaPedra.png"));
+  tileset.put("OBSTACULO_ROCHA", loadImage("../resources/Ambiente/obstaculo_rocha.png"));
+  // Adicione outros tiles de ambiente aqui...
+  
+  // --- Carrega Sprites dos Inimigos (Balões) ---
+  spritesBaloes.put("AMARELO", loadImage("../resources/Inimigos/balaoAmarelo.png"));
+  spritesBaloes.put("AZUL", loadImage("../resources/Inimigos/balaoAzul.png"));
+  spritesBaloes.put("VERDE", loadImage("../resources/Inimigos/balaoVerde.png"));
+  spritesBaloes.put("PRETO", loadImage("../resources/Inimigos/balaoPreto.png"));
+  spritesBaloes.put("CAMUFLADO", loadImage("../resources/Inimigos/balaoCamuflado.png"));
+
+  // --- Carrega Sprites das Torres (Macacos) ---
+  spritesMacacos.put("MACACO_DARDO_L1", loadImage("../resources/Torres/MacacoDardo_L1.png"));
+  spritesMacacos.put("MACACO_DARDO_L2", loadImage("../resources/Torres/MacacoDardo_L2.png"));
+  spritesMacacos.put("MACACO_DARDO_L3", loadImage("../resources/Torres/MacacoDardo_L3.png"));
+  // Adicione os outros macacos aqui...
 }

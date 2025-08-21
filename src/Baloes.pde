@@ -14,7 +14,7 @@ class Balao {
   int valor;            // Quantidade de moedas que o jogador ganha ao estourá-lo.
   float velocidadeBase; // A velocidade normal do balão.
   float velocidadeAtual;  // A velocidade que o balão está usando no momento (pode ser 0 se congelado).
-  
+  PImage icon;
   int caminhoIndex = 0; // "Memória" do balão. Indica para qual ponto do caminho ele está indo.
 
   // --- PROPRIEDADES DE HABILIDADES ESPECIAIS (FLAGS) ---
@@ -106,6 +106,7 @@ class BalaoAmarelo extends Balao {
     this.velocidadeBase = 1.0f;
     this.velocidadeAtual = this.velocidadeBase;
     this.valor = 2;
+    this.icon = spritesBaloes.get("AMARELO");
   }
   
   @Override // Indica que estamos substituindo o método desenhar() da classe mãe.
@@ -123,6 +124,8 @@ class BalaoAzul extends Balao {
     this.velocidadeBase = 1.5f;
     this.velocidadeAtual = this.velocidadeBase;
     this.valor = 5;
+    this.icon = spritesBaloes.get("AZUL");
+
   }
   
   @Override
@@ -151,14 +154,15 @@ class BalaoVerde extends Balao {
   }
 }
 
-class BalaoBranco extends Balao {
-  BalaoBranco() {
+class BalaoCamuflado extends Balao {
+  BalaoCamuflado() {
     super();
     this.vida = 10;
     this.velocidadeBase = 1.0f;
     this.velocidadeAtual = this.velocidadeBase;
     this.valor = 10;
-    
+    this.icon = spritesBaloes.get("CAMUFLADO");
+
     // HABILIDADES ESPECIAIS
     this.eCamuflado = true; // "Invisível" para a maioria das torres.
     this.imuneAGelo = true;   // Não pode ser congelado.
@@ -188,6 +192,7 @@ class BalaoPreto extends Balao {
     this.velocidadeBase = 2.0f;
     this.velocidadeAtual = this.velocidadeBase;
     this.valor = 200;
+    this.icon = spritesBaloes.get("PRETO");
     
     // HABILIDADE ESPECIAL
     this.imuneAExplosoes = true; // Não leva dano de bombas.

@@ -58,7 +58,23 @@ abstract class Macaco {
   abstract void atirar();
   abstract void evoluir();
 
-  abstract void desenhar();
+ void desenhar() {
+    // Desenha o alcance para visualização
+    noFill();
+    stroke(255, 255, 255, 60);
+    ellipse(this.x, this.y, alcanceEmPixels * 2, alcanceEmPixels * 2);
+    
+    // Se o ícone foi carregado, desenha-o.
+    if (icon != null) {
+      // Desenha a imagem, centralizada, com o tamanho de uma célula.
+      image(icon, this.x, this.y, cellSize, cellSize);
+    } else {
+      // Desenho alternativo caso a imagem não carregue
+      fill(139, 69, 19);
+      stroke(0);
+      ellipse(this.x, this.y, cellSize * 0.8, cellSize * 0.8);
+    }
+  }
 }
 
 class MacacoDardo extends Macaco {
@@ -67,6 +83,7 @@ class MacacoDardo extends Macaco {
     this.dano = 5;
     this.alcanceEmTiles = 3.0f;
     this.cadenciaTirosPorSegundo = 1.0f;
+    this.icon = spritesMacacos.get("MACACO_DARDO_L1");
     recalcularStats();
   }
   
@@ -83,10 +100,12 @@ class MacacoDardo extends Macaco {
       this.nivel = 2;
       this.alcanceEmTiles = 4.0f;
       this.cadenciaTirosPorSegundo = 1.2f;
+      this.icon = spritesMacacos.get("MACACO_DARDO_L2");
     } else if (nivel == 2) {
       this.nivel = 3;
-      this.dano = 10;
+      this.dano = 10; 
       this.alcanceEmTiles = 5.0f;
+      this.icon = spritesMacacos.get("MACACO_DARDO_L3");      
     }
     recalcularStats();
   }
@@ -95,6 +114,7 @@ class MacacoDardo extends Macaco {
     this.alcanceEmPixels = this.alcanceEmTiles * cellSize;
     this.cooldownTiroMilissegundos = (long) (1000 / this.cadenciaTirosPorSegundo);
   }
+
 }
 
 class MacacoBomba extends Macaco {
