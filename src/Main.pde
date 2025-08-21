@@ -1,5 +1,7 @@
+import java.util.PriorityQueue;
+
 // ======================================================================
-// ABA PRINCIPAL: Genciador do Jogo (Versão Corrigida e Unificada)
+// ABA PRINCIPAL: Genciador do Jogo (Versão Completa)
 // ======================================================================
 
 // --- OBJETOS DO JOGO ---
@@ -10,10 +12,12 @@ ArrayList<Explosao> explosoes = new ArrayList<Explosao>();
 
 // --- OBJETOS DO MAPA ---
 Grid grid;
-HashMap<String, PImage> tileset;          // Para as imagens do mapa (ambiente)
-HashMap<String, PImage> spritesBaloes;    // Para as imagens dos inimigos
-HashMap<String, PImage> spritesMacacos;   // Para as imagens das torres
-ArrayList<PVector> caminhoDosBaloes; // Armazena as coordenadas (em pixels) do caminho
+HashMap<String, PImage> tileset;
+HashMap<String, PImage> spritesBaloes;
+HashMap<String, PImage> spritesMacacos;
+ArrayList<PVector> caminhoDosBaloes;
+Node startNode;
+Node endNode;
 
 // --- CONFIGURAÇÕES GLOBAIS ---
 int cols = 24;
@@ -26,64 +30,168 @@ void setup() {
   imageMode(CENTER);
   
   cellSize = width / cols;
-  loadTileset(); 
   
-  // 2. Criar o mapa com um caminho fixo
-  criarMapaComCaminhoFixo();
+  carregarTodosOsSprites();
   
-  // 3. Adicionar macacos para teste
-
+  // 1. Cria o mapa vazio
+  grid = new Grid(cols, rows);
+  for (int i=0; i<cols; i++) {
+    for (int j=0; j<rows; j++) {
+      Node currentNode = grid.nodes[i][j];
+      currentNode.gramaVariant = int(random(currentNode.VARIANTS_GRAMA.length));
+    }
+  }
+  
+  // 2. Define os pontos de início e fim
+  startNode = grid.nodes[0][rows/2];
+  endNode = grid.nodes[cols-1][rows/2];
+  
+  // 3. Calcula o caminho inicial
+  atualizarCaminhoDosBaloes();
 }
 
 void draw() {
+  // 1. DESENHAR O CENÁRIO
+  if (grid != null) {
+    grid.drawGrid();
+  } else {
+    background(135, 206, 235);
+  }
+  
+  // 2. SPAWNER DE BALÕES
+  if (frameCount % 90 == 0) { baloes.add(new BalaoAzul()); }
+  if (frameCount % 200 == 0) { baloes.add(new BalaoCamuflado()); }
+  if (frameCount % 500 == 0) { baloes.add(new BalaoPreto()); }
 
+  // 3. ATUALIZAR OBJETOS
+  for (Macaco m : macacos) { m.atualizar(baloes); }
+  for (Balao b : baloes) { b.atualizar(); }
+  for (Projetil p : projeteis) { p.atualizar(); }
+
+  // 4. PROCESSAR DANOS E COLISÕES
+  processarDanos();
+
+  // 5. LIMPAR OBJETOS DESTRUÍDOS
+  limparObjetos();
+  
+  // 6. DESENHAR OBJETOS DINÂMICOS
+  for (Balao b : baloes) { b.desenhar(); }
+  for (Macaco m : macacos) { m.desenhar(); }
+  for (Projetil p : projeteis) { p.desenhar(); }
+  for (Explosao e : explosoes) { e.desenhar(); }
 }
 
+void mousePressed() {
+  int gridX = int(mouseX / cellSize);
+  int gridY = int(mouseY / cellSize);
 
-// Nova função que substitui a criação de mapa aleatório
-void criarMapaComCaminhoFixo() {
-  grid = new Grid(cols, rows);
-  caminhoDosBaloes = new ArrayList<PVector>();
+  if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows) {
+    Node noClicado = grid.nodes[gridX][gridY];
+    
+    if (noClicado.tileType == Node.CAMINHO || noClicado.tileType == Node.OBSTACULO || noClicado == startNode || noClicado == endNode) {
+      return;
+    }
+    
+    noClicado.tileType = Node.OBSTACULO;
+    boolean caminhoExiste = atualizarCaminhoDosBaloes();
+    
+    if (caminhoExiste) {
+      float pixelX = gridX * cellSize + cellSize/2;
+      float pixelY = gridY * cellSize + cellSize/2;
+      macacos.add(new MacacoDardo(pixelX, pixelY));
+    } else {
+      noClicado.tileType = Node.GRAMA;
+      atualizarCaminhoDosBaloes();
+    }
+  }
+}
 
-   // 1. Define todo o mapa como grama com variações aleatórias
+boolean atualizarCaminhoDosBaloes() {
+  grid.addNeighbors();
+  ArrayList<Node> novoCaminhoNodes = dijkstra(startNode, endNode);
+  
+  if (novoCaminhoNodes == null) {
+    return false;
+  }
+  
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
-      Node n = grid.nodes[i][j];
-      n.tileType = Node.GRAMA;
-      
-      // CORREÇÃO 2: Adicionada a linha abaixo para que o jogo use as suas diferentes imagens de grama.
-      n.gramaVariant = int(random(n.VARIANTS_GRAMA.length));
+      if (grid.nodes[i][j].tileType == Node.CAMINHO) {
+        grid.nodes[i][j].tileType = Node.GRAMA;
+      }
     }
   }
 
-  // 2. Desenha um caminho fixo e salva as coordenadas dos centros das células
-  // Caminho: entra pela esquerda, desce, vai pra direita, sobe um pouco e sai pela direita
-  desenharCaminho(0, 7, 5, 7);    // Horizontal
-  desenharCaminho(5, 7, 5, 12);   // Vertical
-  desenharCaminho(5, 12, 18, 12); // Horizontal
-  desenharCaminho(18, 12, 18, 4);  // Vertical
-  desenharCaminho(18, 4, 23, 4);   // Horizontal
+  caminhoDosBaloes = new ArrayList<PVector>();
+  for (Node n : novoCaminhoNodes) {
+    n.tileType = Node.CAMINHO;
+    caminhoDosBaloes.add(new PVector(n.x * cellSize + cellSize/2, n.y * cellSize + cellSize/2));
+  }
+  return true;
 }
 
-// Função auxiliar para criar segmentos do caminho
-void desenharCaminho(int x1, int y1, int x2, int y2) {
-  if (x1 == x2) { // Linha Vertical
-    for (int y = min(y1, y2); y <= max(y1, y2); y++) {
-      Node n = grid.nodes[x1][y];
-      if (n.tileType != Node.CAMINHO) {
-        n.tileType = Node.CAMINHO;
-        caminhoDosBaloes.add(new PVector(x1 * cellSize + cellSize/2, y * cellSize + cellSize/2));
-      }
+ArrayList<Node> dijkstra(Node start, Node end) {
+  PriorityQueue<Node> openSet = new PriorityQueue<Node>();
+  for (int i = 0; i < cols; i++) {
+    for (int j = 0; j < rows; j++) {
+      grid.nodes[i][j].distance = Float.POSITIVE_INFINITY;
+      grid.nodes[i][j].predecessor = null;
     }
-  } else { // Linha Horizontal
-    for (int x = min(x1, x2); x <= max(x1, x2); x++) {
-       Node n = grid.nodes[x][y1];
-      if (n.tileType != Node.CAMINHO) {
-        n.tileType = Node.CAMINHO;
-        caminhoDosBaloes.add(new PVector(x * cellSize + cellSize/2, y1 * cellSize + cellSize/2));
+  }
+  
+  start.distance = 0;
+  openSet.add(start);
+  
+  while (!openSet.isEmpty()) {
+    Node current = openSet.poll();
+    if (current == end) {
+      ArrayList<Node> finalPath = new ArrayList<Node>();
+      Node temp = current;
+      while (temp != null) {
+        finalPath.add(0, temp);
+        temp = temp.predecessor;
+      }
+      return finalPath;
+    }
+    
+    for (Node neighbor : current.neighbors) {
+      float newDistance = current.distance + 1;
+      if (newDistance < neighbor.distance) {
+        neighbor.distance = newDistance;
+        neighbor.predecessor = current;
+        if (!openSet.contains(neighbor)) {
+          openSet.add(neighbor);
+        }
       }
     }
   }
+  return null;
+}
+
+void carregarTodosOsSprites() {
+  tileset = new HashMap<String, PImage>();
+  spritesBaloes = new HashMap<String, PImage>();
+  spritesMacacos = new HashMap<String, PImage>();
+  
+  // --- Ambiente ---
+  tileset.put("GRAMA_PRINCIPAL", loadImage("../resources/Ambiente/grama_principal.png"));
+  tileset.put("CAMINHO_TERRA", loadImage("../resources/Ambiente/caminho_terra.png"));
+  tileset.put("GRAMA_BRANCA", loadImage("../resources/Ambiente/gramaBranca.png"));
+  tileset.put("GRAMA_FLOR", loadImage("../resources/Ambiente/gramaFlor.png"));
+  tileset.put("GRAMA_PEDRA", loadImage("../resources/Ambiente/gramaPedra.png"));
+  tileset.put("OBSTACULO_ROCHA", loadImage("../resources/Ambiente/obstaculo_rocha.png"));
+  
+  // --- Inimigos ---
+  spritesBaloes.put("AMARELO", loadImage("../resources/Inimigos/balaoAmarelo.png"));
+  spritesBaloes.put("AZUL", loadImage("../resources/Inimigos/balaoAzul.png"));
+  spritesBaloes.put("VERDE", loadImage("../resources/Inimigos/balaoVerde.png"));
+  spritesBaloes.put("PRETO", loadImage("../resources/Inimigos/balaoPreto.png"));
+  spritesBaloes.put("CAMUFLADO", loadImage("../resources/Inimigos/balaoCamuflado.png"));
+
+  // --- Torres ---
+  spritesMacacos.put("MACACO_DARDO_L1", loadImage("../resources/Torres/MacacoDardo_L1.png"));
+  spritesMacacos.put("MACACO_DARDO_L2", loadImage("../resources/Torres/MacacoDardo_L2.png"));
+  spritesMacacos.put("MACACO_DARDO_L3", loadImage("../resources/Torres/MacacoDardo_L3.png"));
 }
 
 void processarDanos(){
@@ -123,34 +231,4 @@ void limparObjetos() {
       explosoes.remove(i);
     }
   }
-}
-
-void loadTileset() {
-// Inicializa os HashMaps
-  tileset = new HashMap<String, PImage>();
-  spritesBaloes = new HashMap<String, PImage>();
-  spritesMacacos = new HashMap<String, PImage>();
-  
-
-  // --- Carrega Sprites do Ambiente ---
-  tileset.put("GRAMA_PRINCIPAL", loadImage("../resources/Ambiente/grama_principal.png"));
-  tileset.put("CAMINHO_TERRA", loadImage("../resources/Ambiente/caminho_terra.png"));
-  tileset.put("GRAMA_BRANCA", loadImage("../resources/Ambiente/gramaBranca.png"));
-  tileset.put("GRAMA_FLOR", loadImage("../resources/Ambiente/gramaFlor.png"));
-  tileset.put("GRAMA_PEDRA", loadImage("../resources/Ambiente/gramaPedra.png"));
-  tileset.put("OBSTACULO_ROCHA", loadImage("../resources/Ambiente/obstaculo_rocha.png"));
-  // Adicione outros tiles de ambiente aqui...
-  
-  // --- Carrega Sprites dos Inimigos (Balões) ---
-  spritesBaloes.put("AMARELO", loadImage("../resources/Inimigos/balaoAmarelo.png"));
-  spritesBaloes.put("AZUL", loadImage("../resources/Inimigos/balaoAzul.png"));
-  spritesBaloes.put("VERDE", loadImage("../resources/Inimigos/balaoVerde.png"));
-  spritesBaloes.put("PRETO", loadImage("../resources/Inimigos/balaoPreto.png"));
-  spritesBaloes.put("CAMUFLADO", loadImage("../resources/Inimigos/balaoCamuflado.png"));
-
-  // --- Carrega Sprites das Torres (Macacos) ---
-  spritesMacacos.put("MACACO_DARDO_L1", loadImage("../resources/Torres/MacacoDardo_L1.png"));
-  spritesMacacos.put("MACACO_DARDO_L2", loadImage("../resources/Torres/MacacoDardo_L2.png"));
-  spritesMacacos.put("MACACO_DARDO_L3", loadImage("../resources/Torres/MacacoDardo_L3.png"));
-  // Adicione os outros macacos aqui...
 }

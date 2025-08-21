@@ -24,7 +24,15 @@ class Grid {
     for (int i = 0; i < cols; i++) {
       for (int j = 0; j < rows; j++) {
         // Em cada posição, cria um novo objeto Node, passando suas coordenadas (i, j).
-        nodes[i][j] = new Node(i, j);
+        nodes[i][j] = new Node(i, j, this); 
+      }
+    }
+  }
+  
+  void addNeighbors() {
+    for (int i = 0; i < cols; i++) {
+      for (int j = 0; j < rows; j++) {
+        nodes[i][j].findNeighbors();
       }
     }
   }
