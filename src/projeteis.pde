@@ -7,12 +7,14 @@ class Projetil {
   float velocidade = 8.0;
   int dano;
   Balao alvo;
+  PImage icon;
   
   Projetil(float startX, float startY, int dano, Balao alvo) {
     this.x = startX;
     this.y = startY;
     this.dano = dano;
     this.alvo = alvo;
+    //this.icon = spritesProjeteis.get("DARDO");
   }
   
   void atualizar() {
@@ -23,10 +25,8 @@ class Projetil {
     this.y += sin(angulo) * velocidade;
   }
   
-  void desenhar() {
-    fill(50);
-    noStroke();
-    ellipse(this.x, this.y, 6, 6);
+  void desenhar(){
+    image(this.icon, this.x, this.y);
   }
   
   boolean atingiuAlvo() {
@@ -35,6 +35,26 @@ class Projetil {
   }
 }
 
+class ProjetilShuriken extends Projetil {
+  
+   ProjetilShuriken(float startX, float startY, int dano, Balao alvo) {
+    super(startX, startY, dano, alvo);
+    this.velocidade = 6.0;
+    //this.icon = spritesProjeteis.get("SHURIKEN");
+   }
+}
+
+class ProjetilCongelante extends Projetil {
+  
+   ProjetilCongelante(float startX, float startY, int dano, Balao alvo) {
+    super(startX, startY, dano, alvo);
+    this.velocidade = 3.0;
+    //this.icon = spritesProjeteis.get("FLOCO_DE_NEVE");
+  }
+  
+}
+
+
 class ProjetilBomba extends Projetil {
   float raioDaExplosaoEmPixels;
   
@@ -42,21 +62,15 @@ class ProjetilBomba extends Projetil {
     super(startX, startY, dano, alvo);
     this.raioDaExplosaoEmPixels = raio;
     this.velocidade = 4.0;
+    //this.icon = spritesProjeteis.get("BOMBA");
   }
   
-  @Override
-  void desenhar() {
-    fill(10, 10, 10);
-    stroke(0);
-    ellipse(this.x, this.y, 12, 12);
-  }
 }
 
 class Explosao {
   float x, y;
   float raioEmPixels;
   int dano;
-  
   long tempoCriacao;
   long duracao = 300;
   boolean danoJaAplicado = false;
@@ -64,6 +78,7 @@ class Explosao {
   Explosao(float x, float y, float raio, int dano) {
     this.x = x; this.y = y; this.raioEmPixels = raio; this.dano = dano;
     this.tempoCriacao = millis();
+    
   }
   
   boolean estaAtiva() {

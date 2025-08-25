@@ -78,8 +78,12 @@ class Balao {
     }
   }
   
+    void desenhar() { 
+    image(this.icon, this.pos.x, this.pos.y);
+    
+  }
+  
   // Métodos de Ação e Verificação
-  void desenhar() { /* Este método será sobrescrito pelas subclasses para definir a cor. */ }
   void receberDano(int dano) { this.vida -= dano; }
   boolean estaDestruido() { return this.vida <= 0; }
   boolean chegouAoFim() { return caminhoIndex >= caminhoDosBaloes.size(); }
@@ -109,12 +113,6 @@ class BalaoAmarelo extends Balao {
     this.icon = spritesBaloes.get("AMARELO");
   }
   
-  @Override // Indica que estamos substituindo o método desenhar() da classe mãe.
-  void desenhar() {
-    fill(255, 255, 0); // Define a cor para amarelo.
-    stroke(0);
-    ellipse(pos.x, pos.y, cellSize * 0.7, cellSize * 0.7);
-  }
 }
 
 class BalaoAzul extends Balao {
@@ -128,13 +126,7 @@ class BalaoAzul extends Balao {
 
   }
   
-  @Override
-  void desenhar() {
-    fill(0, 0, 255); // Cor Azul.
-    if (estaCongelado) fill(173, 216, 230); // Se estiver congelado, muda para azul claro.
-    stroke(0);
-    ellipse(pos.x, pos.y, cellSize * 0.7, cellSize * 0.7);
-  }
+
 }
 
 class BalaoVerde extends Balao {
@@ -144,14 +136,10 @@ class BalaoVerde extends Balao {
     this.velocidadeBase = 1.5f;
     this.velocidadeAtual = this.velocidadeBase;
     this.valor = 8;
+    this.icon = spritesBaloes.get("VERDE");
   }
   
-  @Override
-  void desenhar() {
-    fill(0, 255, 0); // Cor Verde.
-    stroke(0);
-    ellipse(pos.x, pos.y, cellSize * 0.7, cellSize * 0.7);
-  }
+
 }
 
 class BalaoCamuflado extends Balao {
@@ -168,21 +156,7 @@ class BalaoCamuflado extends Balao {
     this.imuneAGelo = true;   // Não pode ser congelado.
   }
   
-  @Override
-  void desenhar() {
-    fill(255); // Cor Branca.
-    if (estaCongelado) fill(200); // Fica cinza claro se uma torre tentar congelar.
-    
-    // Adiciona um feedback visual para a camuflagem.
-    if (this.eCamuflado) {
-      stroke(50, 200, 50, 200); // Borda verde translúcida.
-      strokeWeight(3);
-    } else {
-      stroke(0);
-    }
-    ellipse(pos.x, pos.y, cellSize * 0.7, cellSize * 0.7);
-    strokeWeight(1); // Restaura a espessura da borda para o padrão.
-  }
+  
 }
 
 class BalaoPreto extends Balao {
@@ -198,12 +172,4 @@ class BalaoPreto extends Balao {
     this.imuneAExplosoes = true; // Não leva dano de bombas.
   }
   
-  @Override
-  void desenhar() {
-    fill(0); // Cor Preta.
-    if (estaCongelado) fill(100); // Fica cinza escuro se congelado.
-    stroke(255); // Borda branca para destacar na tela.
-    // Desenha um pouco maior para parecer mais ameaçador.
-    ellipse(pos.x, pos.y, cellSize * 0.85, cellSize * 0.85); 
-  }
 }

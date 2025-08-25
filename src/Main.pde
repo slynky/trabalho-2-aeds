@@ -15,6 +15,8 @@ Grid grid;
 HashMap<String, PImage> tileset;
 HashMap<String, PImage> spritesBaloes;
 HashMap<String, PImage> spritesMacacos;
+//hashMap<String, Pimage> spritesProjeteis;
+//hashMap<String, Pimage> spritesVFX;
 ArrayList<PVector> caminhoDosBaloes;
 Node startNode;
 Node endNode;
@@ -23,6 +25,7 @@ Node endNode;
 int cols = 24;
 int rows = 16;
 int cellSize;
+int rodada = 0;
 
 void setup() {
   size(960, 640);
@@ -51,17 +54,9 @@ void setup() {
 }
 
 void draw() {
-  // 1. DESENHAR O CENÁRIO
-  if (grid != null) {
-    grid.drawGrid();
-  } else {
-    background(135, 206, 235);
-  }
-  
-  // 2. SPAWNER DE BALÕES
-  if (frameCount % 90 == 0) { baloes.add(new BalaoAzul()); }
-  if (frameCount % 200 == 0) { baloes.add(new BalaoCamuflado()); }
-  if (frameCount % 500 == 0) { baloes.add(new BalaoPreto()); }
+
+  grid.drawGrid();
+
 
   // 3. ATUALIZAR OBJETOS
   for (Macaco m : macacos) { m.atualizar(baloes); }
@@ -79,6 +74,8 @@ void draw() {
   for (Macaco m : macacos) { m.desenhar(); }
   for (Projetil p : projeteis) { p.desenhar(); }
   for (Explosao e : explosoes) { e.desenhar(); }
+  
+  rodada++;
 }
 
 void mousePressed() {
@@ -174,12 +171,22 @@ void carregarTodosOsSprites() {
   spritesMacacos = new HashMap<String, PImage>();
   
   // --- Ambiente ---
-  tileset.put("GRAMA_PRINCIPAL", loadImage("../resources/Ambiente/grama_principal.png"));
-  tileset.put("CAMINHO_TERRA", loadImage("../resources/Ambiente/caminho_terra.png"));
-  tileset.put("GRAMA_BRANCA", loadImage("../resources/Ambiente/gramaBranca.png"));
-  tileset.put("GRAMA_FLOR", loadImage("../resources/Ambiente/gramaFlor.png"));
-  tileset.put("GRAMA_PEDRA", loadImage("../resources/Ambiente/gramaPedra.png"));
-  tileset.put("OBSTACULO_ROCHA", loadImage("../resources/Ambiente/obstaculo_rocha.png"));
+tileset.put("CAMINHO_BORDA", loadImage("../resources/Ambiente/caminho_borda.png"));
+tileset.put("CAMINHO_LATERAL", loadImage("../resources/Ambiente/caminho_lateral.png"));
+tileset.put("CAMINHO_SUPERIOR", loadImage("../resources/Ambiente/caminho_superior.png"));
+tileset.put("CAMINHO_TERRA", loadImage("../resources/Ambiente/caminho_terra.png"));
+tileset.put("CAMINHO_TERRA_2", loadImage("../resources/Ambiente/caminho_terra_2.png"));
+tileset.put("ENTRADA_BALOES", loadImage("../resources/Ambiente/entrada_baloes.gif"));
+tileset.put("GRAMA_BRANCA", loadImage("../resources/Ambiente/gramaBranca.png"));
+tileset.put("GRAMA_BRANCA_2", loadImage("../resources/Ambiente/gramaBranca2.png"));
+tileset.put("GRAMA_FLOR", loadImage("../resources/Ambiente/gramaFlor.png"));
+tileset.put("GRAMA_PEDRA", loadImage("../resources/Ambiente/gramaPedra.png"));
+tileset.put("GRAMA_PRINCIPAL", loadImage("../resources/Ambiente/grama_principal.png"));
+tileset.put("NUCLEO_DEFENSAVEL", loadImage("../resources/Ambiente/nucleo_defensavel.png"));
+tileset.put("OBSTACULO_PALMEIRA", loadImage("../resources/Ambiente/obstaculo_palmeira.png"));
+tileset.put("OBSTACULO_ROCHA", loadImage("../resources/Ambiente/obstaculo_rocha.png"));
+tileset.put("PEDRA", loadImage("../resources/Ambiente/Pedra.png"));
+
   
   // --- Inimigos ---
   spritesBaloes.put("AMARELO", loadImage("../resources/Inimigos/balaoAmarelo.png"));
@@ -192,6 +199,23 @@ void carregarTodosOsSprites() {
   spritesMacacos.put("MACACO_DARDO_L1", loadImage("../resources/Torres/MacacoDardo_L1.png"));
   spritesMacacos.put("MACACO_DARDO_L2", loadImage("../resources/Torres/MacacoDardo_L2.png"));
   spritesMacacos.put("MACACO_DARDO_L3", loadImage("../resources/Torres/MacacoDardo_L3.png"));
+  
+  // --- Projeteis ---
+  /*
+  spritesProjeteis.put("DARDO", loadImage("../resources/projeteis/dardo.png"));
+  spritesProjeteis.put("BOMBA", loadImage("../resources/projeteis/bomba.png"));
+  spritesProjeteis.put("FLOCO_DE_NEVE", loadImage("../resources/projeteis/floco_de_neve.png"));
+  spritesProjeteis.put("SHURIKEN", loadImage("../resources/projeteis/shuriken.png"));
+  */
+  
+  // --- VFX ---
+  /*
+  spritesVFX.put("BALAO_POP", loadImage("../resources/vfx/balao_pop.png"));
+  spritesVFX.put("EXPLOSAO_BOMBA", loadImage("../resources/vfx/explosao_bomba.png"));  
+  spritesVFX.put("EFEITO_CONGELADO", loadImage("../resources/vfx/efeito_congelado.png"));
+
+  */
+  
 }
 
 void processarDanos(){
@@ -221,8 +245,9 @@ void processarDanos(){
 }
 
 void limparObjetos() {
-    for (int i = baloes.size() - 1; i >= 0; i--) {
+  for (int i = baloes.size() - 1; i >= 0; i--) {
     if (baloes.get(i).estaDestruido() || baloes.get(i).chegouAoFim()) {
+      balancaJogador += baloes.get(i).valor;
       baloes.remove(i);
     }
   }
@@ -231,4 +256,10 @@ void limparObjetos() {
       explosoes.remove(i);
     }
   }
+}
+
+void spawner() {
+   if (rodada < 3){
+     
+   }
 }

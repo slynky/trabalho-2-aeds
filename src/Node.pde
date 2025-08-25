@@ -14,7 +14,13 @@ class Node implements Comparable<Node> {
   
   // --- Atributos Visuais ---
   /** Array com as chaves das diferentes imagens de grama para variação visual. */
-  final String[] VARIANTS_GRAMA = { "GRAMA", "GRAMA_BRANCA", "GRAMA_BRANCA2", "GRAMA_FLORIDA", "GRAMA_PEDRA","GRAMA_COM_FLORES" };
+  final String[] VARIANTS_GRAMA = { 
+      "GRAMA_PRINCIPAL", 
+      "GRAMA_BRANCA", 
+      "GRAMA_BRANCA_2", 
+      "GRAMA_FLOR", 
+      "GRAMA_PEDRA"
+  };
   /** Armazena o tipo atual deste Node (GRAMA, CAMINHO ou OBSTACULO). */
   int tileType = GRAMA;
   /** Armazena o índice da variante de grama a ser usada para o desenho. */

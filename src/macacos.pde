@@ -11,7 +11,7 @@ abstract class Macaco {
   float cadenciaTirosPorSegundo;
   long cooldownTiroMilissegundos;
   long tempoUltimoTiro;
-  
+  int preco;
   int dano;
   Balao alvoAtual;
   boolean podeDetectarCamuflado = false;
