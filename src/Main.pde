@@ -26,6 +26,7 @@ int cols = 24;
 int rows = 16;
 int cellSize;
 int rodada = 0;
+boolean autoPlay = false;
 
 void setup() {
   size(960, 640);
@@ -75,7 +76,10 @@ void draw() {
   for (Projetil p : projeteis) { p.desenhar(); }
   for (Explosao e : explosoes) { e.desenhar(); }
   
-  rodada++;
+  if (baloes.isEmpty() && explosoes.isEmpty()){
+    rodada++;
+    //logica para pausar o jogo e pedir confirmação para o usuario se pode continuar ou n
+  }
 }
 
 void mousePressed() {
@@ -171,21 +175,21 @@ void carregarTodosOsSprites() {
   spritesMacacos = new HashMap<String, PImage>();
   
   // --- Ambiente ---
-tileset.put("CAMINHO_BORDA", loadImage("../resources/Ambiente/caminho_borda.png"));
-tileset.put("CAMINHO_LATERAL", loadImage("../resources/Ambiente/caminho_lateral.png"));
-tileset.put("CAMINHO_SUPERIOR", loadImage("../resources/Ambiente/caminho_superior.png"));
-tileset.put("CAMINHO_TERRA", loadImage("../resources/Ambiente/caminho_terra.png"));
-tileset.put("CAMINHO_TERRA_2", loadImage("../resources/Ambiente/caminho_terra_2.png"));
-tileset.put("ENTRADA_BALOES", loadImage("../resources/Ambiente/entrada_baloes.gif"));
-tileset.put("GRAMA_BRANCA", loadImage("../resources/Ambiente/gramaBranca.png"));
-tileset.put("GRAMA_BRANCA_2", loadImage("../resources/Ambiente/gramaBranca2.png"));
-tileset.put("GRAMA_FLOR", loadImage("../resources/Ambiente/gramaFlor.png"));
-tileset.put("GRAMA_PEDRA", loadImage("../resources/Ambiente/gramaPedra.png"));
-tileset.put("GRAMA_PRINCIPAL", loadImage("../resources/Ambiente/grama_principal.png"));
-tileset.put("NUCLEO_DEFENSAVEL", loadImage("../resources/Ambiente/nucleo_defensavel.png"));
-tileset.put("OBSTACULO_PALMEIRA", loadImage("../resources/Ambiente/obstaculo_palmeira.png"));
-tileset.put("OBSTACULO_ROCHA", loadImage("../resources/Ambiente/obstaculo_rocha.png"));
-tileset.put("PEDRA", loadImage("../resources/Ambiente/Pedra.png"));
+  tileset.put("CAMINHO_BORDA", loadImage("../resources/Ambiente/caminho_borda.png"));
+  tileset.put("CAMINHO_LATERAL", loadImage("../resources/Ambiente/caminho_lateral.png"));
+  tileset.put("CAMINHO_SUPERIOR", loadImage("../resources/Ambiente/caminho_superior.png"));
+  tileset.put("CAMINHO_TERRA", loadImage("../resources/Ambiente/caminho_terra.png"));
+  tileset.put("CAMINHO_TERRA_2", loadImage("../resources/Ambiente/caminho_terra_2.png"));
+  tileset.put("ENTRADA_BALOES", loadImage("../resources/Ambiente/entrada_baloes.gif"));
+  tileset.put("GRAMA_BRANCA", loadImage("../resources/Ambiente/gramaBranca.png"));
+  tileset.put("GRAMA_BRANCA_2", loadImage("../resources/Ambiente/gramaBranca2.png"));
+  tileset.put("GRAMA_FLOR", loadImage("../resources/Ambiente/gramaFlor.png"));
+  tileset.put("GRAMA_PEDRA", loadImage("../resources/Ambiente/gramaPedra.png"));
+  tileset.put("GRAMA_PRINCIPAL", loadImage("../resources/Ambiente/grama_principal.png"));
+  tileset.put("NUCLEO_DEFENSAVEL", loadImage("../resources/Ambiente/nucleo_defensavel.png"));
+  tileset.put("OBSTACULO_PALMEIRA", loadImage("../resources/Ambiente/obstaculo_palmeira.png"));
+  tileset.put("OBSTACULO_ROCHA", loadImage("../resources/Ambiente/obstaculo_rocha.png"));
+  tileset.put("PEDRA", loadImage("../resources/Ambiente/Pedra.png"));
 
   
   // --- Inimigos ---
@@ -259,7 +263,5 @@ void limparObjetos() {
 }
 
 void spawner() {
-   if (rodada < 3){
-     
-   }
+   
 }
