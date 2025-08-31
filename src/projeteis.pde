@@ -14,7 +14,7 @@ class Projetil {
     this.y = startY;
     this.dano = dano;
     this.alvo = alvo;
-    //this.icon = spritesProjeteis.get("DARDO");
+    this.icon = spritesProjeteis.get("DARDO");
   }
   
   void atualizar() {
@@ -40,7 +40,7 @@ class ProjetilShuriken extends Projetil {
    ProjetilShuriken(float startX, float startY, int dano, Balao alvo) {
     super(startX, startY, dano, alvo);
     this.velocidade = 6.0;
-    //this.icon = spritesProjeteis.get("SHURIKEN");
+    this.icon = spritesProjeteis.get("SHURIKEN");
    }
 }
 
@@ -49,7 +49,7 @@ class ProjetilCongelante extends Projetil {
    ProjetilCongelante(float startX, float startY, int dano, Balao alvo) {
     super(startX, startY, dano, alvo);
     this.velocidade = 3.0;
-    //this.icon = spritesProjeteis.get("FLOCO_DE_NEVE");
+    this.icon = spritesProjeteis.get("FLOCO_DE_NEVE");
   }
   
 }
@@ -62,7 +62,7 @@ class ProjetilBomba extends Projetil {
     super(startX, startY, dano, alvo);
     this.raioDaExplosaoEmPixels = raio;
     this.velocidade = 4.0;
-    //this.icon = spritesProjeteis.get("BOMBA");
+    this.icon = spritesProjeteis.get("BOMBA");
   }
   
 }

@@ -5,7 +5,6 @@
 abstract class Macaco {
   int nivel;
   float x, y;
-  
   float alcanceEmTiles;
   float alcanceEmPixels;
   float cadenciaTirosPorSegundo;
