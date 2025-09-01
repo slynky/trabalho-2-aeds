@@ -20,7 +20,6 @@ class Balao {
   // --- PROPRIEDADES DE HABILIDADES ESPECIAIS (FLAGS) ---
   boolean eCamuflado = false;      // Se for true, só pode ser visto por torres específicas (Ninja).
   boolean imuneAGelo = false;        // Se for true, não é afetado pelo Macaco de Gelo.
-  boolean imuneAExplosoes = false; // Se for true, não leva dano do Macaco Bomba.
   
   // --- CONTROLE DE EFEITOS TEMPORÁRIOS ---
   boolean estaCongelado = false;      // Flag para saber se o balão está parado pelo gelo.
@@ -49,39 +48,57 @@ class Balao {
    * O método atualizar() é a "inteligência" do balão, chamado a cada quadro (frame) do jogo.
    */
   void atualizar() {
-    // Verifica se o balão está congelado e se já passou o tempo de acabar o congelamento.
-    // millis() retorna o tempo (em milissegundos) desde que o programa começou a rodar.
+    // --- PARTE 1: GERENCIAR STATUS (CONGELAMENTO) ---
+    // Verifica se o tempo de congelamento já acabou.
     if (estaCongelado && millis() > tempoFimCongelamento) {
-      estaCongelado = false; // Descongela o balão.
-      this.velocidadeAtual = this.velocidadeBase; // Restaura a velocidade normal.
+      estaCongelado = false;
     }
-    
-    // LÓGICA DE MOVIMENTO: SÓ EXECUTA SE O BALÃO NÃO CHEGOU AO FIM DO CAMINHO.
-    if (caminhoIndex < caminhoDosBaloes.size()) {
-      // 1. Pega a coordenada do próximo ponto do caminho que ele precisa alcançar.
-      PVector alvo = caminhoDosBaloes.get(caminhoIndex);
+
+    // --- PARTE 2: DETERMINAR A VELOCIDADE ATUAL ---
+    // A velocidade só é alterada pelo terreno se o balão NÃO estiver congelado.
+    if (!estaCongelado) {
+      // 1. Converte a posição em pixels do balão para coordenadas do grid
+      int gridX = int(pos.x / cellSize);
+      int gridY = int(pos.y / cellSize);
       
-      // 2. Calcula o vetor de direção: (Ponto Final) - (Ponto Inicial).
+      // 2. Garante que as coordenadas são válidas antes de acessar o grid
+      if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows) {
+        Node noAtual = grid.nodes[gridX][gridY];
+        
+        // 3. Verifica o tipo do tile e ajusta a velocidade
+        if (noAtual.obstaculoVariant != null) {
+          this.velocidadeAtual = this.velocidadeBase * 0.5f; // Metade da velocidade
+        } else {
+          this.velocidadeAtual = this.velocidadeBase; // Velocidade normal
+        }
+      } else {
+        // Se estiver fora do grid (no início do caminho), usa a velocidade normal
+        this.velocidadeAtual = this.velocidadeBase;
+      }
+    }
+    // Se o balão estiver congelado, sua velocidadeAtual já é 0 (definida por aplicarCongelamento)
+    // e o bloco acima é pulado, mantendo-o parado.
+
+    // --- PARTE 3: LÓGICA DE MOVIMENTO ---
+    // Esta parte usa a 'velocidadeAtual' que foi definida na Parte 2.
+    if (caminhoIndex < caminhoDosBaloes.size()) {
+      PVector alvo = caminhoDosBaloes.get(caminhoIndex);
       PVector direcao = PVector.sub(alvo, pos);
       
-      // 3. Verifica se o balão já está "perto o suficiente" do alvo.
-      // (usar magSq() é mais rápido que mag() porque evita uma raiz quadrada).
+      // Usa magSq() para performance, comparando com o quadrado da velocidade
       if (direcao.magSq() < velocidadeAtual * velocidadeAtual) {
-        // Se já chegou, avança para o próximo ponto do caminho.
-        caminhoIndex++;
+        caminhoIndex++; // Avança para o próximo ponto do caminho
       } else {
-        // 4. Se ainda não chegou, calcula o movimento para este quadro.
-        direcao.normalize(); // Reduz o vetor para ter comprimento 1 (só nos importa a direção).
-        direcao.mult(velocidadeAtual); // Aumenta o vetor para ter o comprimento da velocidade (distância a percorrer).
-        pos.add(direcao); // Adiciona o vetor de movimento à posição atual do balão.
+        direcao.normalize(); // Pega apenas a direção
+        direcao.mult(velocidadeAtual); // Aplica a velocidade correta
+        pos.add(direcao); // Move o balão
       }
     }
   }
   
     void desenhar() { 
     image(this.icon, this.pos.x, this.pos.y);
-    
-  }
+    }
   
   // Métodos de Ação e Verificação
   void receberDano(int dano) { this.vida -= dano; }
@@ -90,9 +107,11 @@ class Balao {
   
   // Aplica o efeito de congelamento
   void aplicarCongelamento(long duracaoMs) {
-    this.estaCongelado = true;
-    this.velocidadeAtual = 0; // Para o balão.
-    this.tempoFimCongelamento = millis() + duracaoMs; // Agenda o fim do congelamento.
+    if (!this.imuneAGelo) {
+      this.estaCongelado = true;
+      this.velocidadeAtual = 0; // Para o balão.
+      this.tempoFimCongelamento = millis() + duracaoMs; // Agenda o fim do congelamento.
+    }  
   }
 }
 
@@ -109,7 +128,7 @@ class BalaoAmarelo extends Balao {
     this.vida = 10;
     this.velocidadeBase = 1.0f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 5;
+    this.valor = 10;
     this.icon = spritesBaloes.get("AMARELO");
     this.dano = 1;
   }
@@ -122,7 +141,7 @@ class BalaoAzul extends Balao {
     this.vida = 15;
     this.velocidadeBase = 1.5f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 10;
+    this.valor = 18;
     this.icon = spritesBaloes.get("AZUL");
     this.dano = 2;
 
@@ -137,7 +156,7 @@ class BalaoVerde extends Balao {
     this.vida = 20;
     this.velocidadeBase = 1.5f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 16;
+    this.valor = 25;
     this.icon = spritesBaloes.get("VERDE");
     this.dano = 3;
   }
@@ -151,7 +170,7 @@ class BalaoCamuflado extends Balao {
     this.vida = 10;
     this.velocidadeBase = 1.0f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 20;
+    this.valor = 35;
     this.icon = spritesBaloes.get("CAMUFLADO");
     this.dano = 2;
     // HABILIDADES ESPECIAIS
@@ -173,7 +192,6 @@ class BalaoPreto extends Balao {
     this.dano = 100;
 
     // HABILIDADE ESPECIAL
-    this.imuneAExplosoes = true; // Não leva dano de bombas.
     this.imuneAGelo = true;   // Não pode ser congelado.
   }
   

@@ -1,15 +1,22 @@
+import java.util.Random;
+
 /**
  * Representa uma única célula (tile) no grid do mapa.
+ * Impecilhos são tratados como decorações sobrepostas.
  */
 class Node implements Comparable<Node> {
   // --- Constantes de Tipo de Tile ---
   static final int GRAMA = 0;
   static final int CAMINHO = 1;
-  static final int OBSTACULO = 2;
-  static final int IMPECILIO = 3;
+  static final int OBSTACULO = 2; // Para torres que bloqueiam o caminho
+  
   // --- Atributos Visuais ---
+  String obstaculoVariant = null; // Guarda o sprite da decoração (impecilho)
+  
   final String[] VARIANTS_GRAMA = { 
     "GRAMA_PRINCIPAL", 
+    "GRAMA",
+    "GRAMA_FLORIDA",
     "GRAMA_BRANCA", 
     "GRAMA_BRANCA_2", 
     "GRAMA_FLOR", 
@@ -28,9 +35,6 @@ class Node implements Comparable<Node> {
   float distance = Float.POSITIVE_INFINITY;
   Node predecessor = null;
 
-  /**
-   * Construtor para criar um novo Node.
-   */
   Node(int x_, int y_, Grid g) {
     this.x = x_;
     this.y = y_;
@@ -38,11 +42,10 @@ class Node implements Comparable<Node> {
     this.neighbors = new ArrayList<Node>();
   }
   
-  /**
-   * Encontra e armazena os vizinhos diretos.
-   */
   void findNeighbors() {
     neighbors.clear();
+    // A lógica de encontrar vizinhos não muda. 
+    // Impecilhos não afetam o tileType, então o pathfinding já os ignora.
     if (x < parentGrid.cols - 1) {
       Node neighbor = parentGrid.nodes[x + 1][y];
       if (neighbor.tileType != OBSTACULO) neighbors.add(neighbor);
@@ -61,61 +64,46 @@ class Node implements Comparable<Node> {
     }
   }
   
-  /**
-   * Compara este Node com outro baseado na sua distância.
-   */
   @Override
   int compareTo(Node other) {
     return Float.compare(this.distance, other.distance);
   }
 
   /**
-   * Desenha a representação visual deste Node na tela,
-   * usando a lógica de bordas para o tileset fornecido.
+   * Desenha a célula em camadas para permitir que impecilhos
+   * fiquem por cima do caminho.
    */
   void drawNode() {
     float drawX = x * cellSize + cellSize/2;
     float drawY = y * cellSize + cellSize/2;
 
-    // --- Passo 1: Desenha a base de grama para todos os tiles ---
+    // --- Passo 1: Desenha a base de grama por baixo de tudo ---
     String chaveDaGrama = VARIANTS_GRAMA[gramaVariant];
-    PImage gramaSprite = tileset.get(chaveDaGrama);
-    if (gramaSprite != null) {
-      image(gramaSprite, drawX, drawY, cellSize, cellSize);
-    }
+    image(tileset.get(chaveDaGrama), drawX, drawY, cellSize, cellSize);
 
-    // --- Passo 2: Desenha o caminho e suas bordas ---
+    // --- Passo 2: Desenha o caminho (se for um tile de caminho) ---
     if (tileType == CAMINHO) {
-      // Desenha a base de terra do caminho.
-      PImage terraSprite = tileset.get(random(1) < 0.5 ? "CAMINHO_TERRA" : "CAMINHO_TERRA_2");
-      if (terraSprite != null) {
-        image(terraSprite, drawX, drawY, cellSize, cellSize);
-      }
-
-      // ✨ LÓGICA ATUALIZADA COM OS NOVOS SPRITES ✨
-      // Desenha as bordas por cima, se o vizinho for grama.
-      // Como não são 'else if', múltiplos sprites podem ser desenhados, criando os cantos.
+      boolean vizinhoCima = (y > 0 && parentGrid.nodes[x][y-1].tileType == CAMINHO);
+      boolean vizinhoBaixo = (y < parentGrid.rows - 1 && parentGrid.nodes[x][y+1].tileType == CAMINHO);
+      boolean vizinhoEsq = (x > 0 && parentGrid.nodes[x-1][y].tileType == CAMINHO);
+      boolean vizinhoDir = (x < parentGrid.cols - 1 && parentGrid.nodes[x+1][y].tileType == CAMINHO);
       
-      // Borda de Cima
-      if (y > 0 && parentGrid.nodes[x][y-1].tileType == GRAMA) {
-        image(tileset.get("CAMINHO_SUPERIOR"), drawX, drawY, cellSize, cellSize);
-      }
-      // Borda de Baixo
-      if (y < parentGrid.rows - 1 && parentGrid.nodes[x][y+1].tileType == GRAMA) {
-        // Usando o novo sprite CAMINHO_INFERIOR
-        image(tileset.get("CAMINHO_INFERIOR"), drawX, drawY, cellSize, cellSize);
-      }
-      // Borda da Esquerda
-      if (x > 0 && parentGrid.nodes[x-1][y].tileType == GRAMA) {
-        image(tileset.get("CAMINHO_LATERAL_ESQUERDO"), drawX, drawY, cellSize, cellSize);
-      }
-      // Borda da Direita
-      if (x < parentGrid.cols - 1 && parentGrid.nodes[x+1][y].tileType == GRAMA) {
-        image(tileset.get("CAMINHO_LATERAL_DIREITO"), drawX, drawY, cellSize, cellSize);
-      }
+      String chaveDoCaminho = "CAMINHO_HORIZONTAL"; // Padrão
+      if (vizinhoCima && vizinhoBaixo) { chaveDoCaminho = "CAMINHO_VERTICAL"; }
+      else if (vizinhoEsq && vizinhoDir) { chaveDoCaminho = "CAMINHO_HORIZONTAL"; }
+      else if (vizinhoBaixo && vizinhoDir) { chaveDoCaminho = "CURVA_CIMA_ESQUERDA"; }
+      else if (vizinhoBaixo && vizinhoEsq) { chaveDoCaminho = "CURVA_CIMA_DIREITA"; }
+      else if (vizinhoCima && vizinhoDir) { chaveDoCaminho = "CURVA_BAIXO_ESQUERDA"; }
+      else if (vizinhoCima && vizinhoEsq) { chaveDoCaminho = "CURVA_BAIXO_DIREITA"; }
+      image(tileset.get(chaveDoCaminho), drawX, drawY, cellSize, cellSize);
     }
     
-    // --- Passo 3: Desenha a entrada e a saída por último ---
+    // --- Passo 3: Desenha a decoração (impecilho) por cima, se existir ---
+    if (this.obstaculoVariant != null) {
+        image(tileset.get(this.obstaculoVariant), drawX, drawY, cellSize, cellSize);
+    }
+    
+    // --- Passo 4: Desenha a entrada e a saída (sempre por cima de tudo) ---
     if (this == startNode) {
       image(tileset.get("ENTRADA_BALOES"), drawX, drawY, cellSize, cellSize);
     } else if (this == endNode) {
