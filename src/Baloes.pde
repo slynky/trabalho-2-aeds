@@ -130,7 +130,7 @@ class BalaoAmarelo extends Balao {
     this.velocidadeAtual = this.velocidadeBase;
     this.valor = 10;
     this.icon = spritesBaloes.get("AMARELO");
-    this.dano = 100;
+    this.dano = 1;
   }
   
 }
