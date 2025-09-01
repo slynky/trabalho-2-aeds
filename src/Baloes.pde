@@ -16,7 +16,7 @@ class Balao {
   float velocidadeAtual;  // A velocidade que o balão está usando no momento (pode ser 0 se congelado).
   PImage icon;
   int caminhoIndex = 0; // "Memória" do balão. Indica para qual ponto do caminho ele está indo.
-
+  int dano;
   // --- PROPRIEDADES DE HABILIDADES ESPECIAIS (FLAGS) ---
   boolean eCamuflado = false;      // Se for true, só pode ser visto por torres específicas (Ninja).
   boolean imuneAGelo = false;        // Se for true, não é afetado pelo Macaco de Gelo.
@@ -109,8 +109,9 @@ class BalaoAmarelo extends Balao {
     this.vida = 10;
     this.velocidadeBase = 1.0f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 2;
+    this.valor = 5;
     this.icon = spritesBaloes.get("AMARELO");
+    this.dano = 1;
   }
   
 }
@@ -121,8 +122,9 @@ class BalaoAzul extends Balao {
     this.vida = 15;
     this.velocidadeBase = 1.5f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 5;
+    this.valor = 10;
     this.icon = spritesBaloes.get("AZUL");
+    this.dano = 2;
 
   }
   
@@ -135,8 +137,9 @@ class BalaoVerde extends Balao {
     this.vida = 20;
     this.velocidadeBase = 1.5f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 8;
+    this.valor = 16;
     this.icon = spritesBaloes.get("VERDE");
+    this.dano = 3;
   }
   
 
@@ -148,9 +151,9 @@ class BalaoCamuflado extends Balao {
     this.vida = 10;
     this.velocidadeBase = 1.0f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 10;
+    this.valor = 20;
     this.icon = spritesBaloes.get("CAMUFLADO");
-
+    this.dano = 2;
     // HABILIDADES ESPECIAIS
     this.eCamuflado = true; // "Invisível" para a maioria das torres.
     this.imuneAGelo = true;   // Não pode ser congelado.
@@ -162,14 +165,16 @@ class BalaoCamuflado extends Balao {
 class BalaoPreto extends Balao {
   BalaoPreto() {
     super();
-    this.vida = 100; // Vida alta, tipo "Boss".
+    this.vida = 200; 
     this.velocidadeBase = 2.0f;
     this.velocidadeAtual = this.velocidadeBase;
-    this.valor = 200;
+    this.valor = 1000;
     this.icon = spritesBaloes.get("PRETO");
-    
+    this.dano = 100;
+
     // HABILIDADE ESPECIAL
     this.imuneAExplosoes = true; // Não leva dano de bombas.
+    this.imuneAGelo = true;   // Não pode ser congelado.
   }
   
 }

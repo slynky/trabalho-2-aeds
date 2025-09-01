@@ -46,12 +46,18 @@ class ProjetilShuriken extends Projetil {
 
 class ProjetilCongelante extends Projetil {
   
-   ProjetilCongelante(float startX, float startY, int dano, Balao alvo) {
+  float duracaoCongelamentoSegundos;
+  float raioCongelamentoPixels;
+
+  ProjetilCongelante(float startX, float startY, int dano, Balao alvo, float duracao, float raio) {
     super(startX, startY, dano, alvo);
-    this.velocidade = 3.0;
+    this.velocidade = 5.0f; // Flocos de neve são mais rápidos
     this.icon = spritesProjeteis.get("FLOCO_DE_NEVE");
+    
+    // Armazena os dados do efeito que serão usados no impacto
+    this.duracaoCongelamentoSegundos = duracao;
+    this.raioCongelamentoPixels = raio;
   }
-  
 }
 
 
