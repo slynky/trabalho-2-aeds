@@ -369,19 +369,47 @@ void carregarTodosOsSprites() {
 }
 
 void processarDanos(){
+  // Itera de trás para frente para poder remover itens sem problemas
   for (int i = projeteis.size() - 1; i >= 0; i--) {
     Projetil p = projeteis.get(i);
+    
+    // Se o projétil atingiu o alvo...
     if (p.atingiuAlvo()) {
+      // Se o alvo ainda existe, causa o dano principal
       if (p.alvo != null && !p.alvo.estaDestruido()) {
         p.alvo.receberDano(p.dano);
-        if (p instanceof ProjetilBomba) {
-          ProjetilBomba pb = (ProjetilBomba) p;
-          explosoes.add(new Explosao(pb.x, pb.y, pb.raioDaExplosaoEmPixels, pb.dano));
+      }
+      
+      // VERIFICA O TIPO DE PROJÉTIL PARA EFEITOS ESPECIAIS
+      
+      // Se for uma Bomba, cria uma Explosão
+      if (p instanceof ProjetilBomba) {
+        ProjetilBomba pb = (ProjetilBomba) p;
+        explosoes.add(new Explosao(pb.x, pb.y, pb.raioDaExplosaoEmPixels, pb.dano));
+      } 
+      // ✨ SE FOR UM PROJÉTIL CONGELANTE, CONGELA A ÁREA ✨
+      else if (p instanceof ProjetilCongelante) {
+        ProjetilCongelante pc = (ProjetilCongelante) p;
+        
+        // Itera por TODOS os balões para ver quem está na área de efeito
+        for (Balao b : baloes) {
+          if (!b.imuneAGelo && dist(b.pos.x, b.pos.y, pc.x, pc.y) <= pc.raioCongelamentoPixels) {
+            b.aplicarCongelamento((long)(pc.duracaoCongelamentoSegundos * 1000));
+            
+            // O dano do projétil de gelo é aplicado em área também
+            if (pc.dano > 0) {
+              b.receberDano(pc.dano);
+            }
+          }
         }
       }
+      
+      // Remove o projétil da lista
       projeteis.remove(i);
     }
   }
+  
+  // A lógica de dano das explosoes
   for (Explosao e : explosoes) {
     if (!e.danoJaAplicado) {
       for (Balao b : baloes) {
