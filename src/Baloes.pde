@@ -97,7 +97,9 @@ class Balao {
   }
   
     void desenhar() { 
+      
     image(this.icon, this.pos.x, this.pos.y);
+    
     }
   
   // Métodos de Ação e Verificação

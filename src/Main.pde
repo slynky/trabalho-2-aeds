@@ -100,7 +100,10 @@ void setup() {
   }
   
   // 2. Cria o caminho personalizado do mapa
-  criarCaminhoManualmente();
+  criarMapaComBifurcacao();
+  
+  //atualiza o caminho a ser feito inicialmente
+  atualizarCaminhoDosBaloes();
 }
 
 void draw() {
@@ -483,6 +486,7 @@ void processarDanos(){
     if (!e.danoJaAplicado) {
       e.danoJaAplicado = true;
     }
+    
   }
 }
 
