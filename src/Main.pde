@@ -118,7 +118,7 @@ void draw() {
     
     fill(255); // Branco para a instrução
     textSize(28);
-    text("Aperte ENTER para reiniciar", width / 2, height / 2 + 40);
+    text("Aperte alguma tecla para reiniciar para reiniciar", width / 2, height / 2 + 40);
     
     return; // Importante: Para a execução do draw aqui para não rodar a lógica do jogo
   }
@@ -542,6 +542,11 @@ void spawner() {
 }
 
 void keyPressed() {
+  if (gameOver){
+    resetarJogo();
+    return;
+  }
+  
   if (keyCode == ENTER || keyCode == RETURN) {
     if (pause) {
       pause = false;
