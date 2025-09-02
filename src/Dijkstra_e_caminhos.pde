@@ -79,9 +79,9 @@ ArrayList<Node> dijkstra(Node start, Node end) {
       
       // Se o nó vizinho tiver uma decoração de impecilho...
       if (neighbor.obstaculoVariant != null ) {
-        cost = 3.0f; // ...o custo para entrar nele é dobrado!
+        cost = 3.5f; // ...o custo para entrar nele é dobrado!
       } else if (neighbor.tileType == Node.GRAMA) {
-        cost = 3.5f;
+        cost = 2.5f;
       } else if (neighbor.tileType == Node.OBSTACULO) {
         cost = 1000000f;
       }
